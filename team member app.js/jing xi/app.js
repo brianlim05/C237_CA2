@@ -52,7 +52,6 @@ app.get('/deleteItem/:id', (req, res) => {
           <th width="100">Item Image</th>
           <th width="50">Item Tag</th>
           <th width="50">Total Stock</th>
-          <th width="50">Price</th>
           <th width="50">Edit</th>
           <th width="50">Delete</th>
         </tr>
