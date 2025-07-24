@@ -65,7 +65,6 @@ app.get('/deleteItem/:id', (req, res) => {
             <td><img src='images/<%= inventory[i].image %>' width="20%"></td>
             <td><%= inventory[i].tag %></td>
             <td><%= inventory[i].stock %></td>
-            <td><%= inventory[i].price %></td>
             <td><a href='/updateItem/<%= inventory[i].itemId %>'>Edit</a></td>
             <td>
               <a 
