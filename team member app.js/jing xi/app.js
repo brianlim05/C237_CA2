@@ -60,7 +60,7 @@ app.get('/deleteItem/:id', (req, res) => {
         <% for(let i = 0; i < inventory.length; i++) { %>
           <tr>
             <td>
-              <a href='/item/<%= inventory[i].itemId %>'><%= inventory[i].name %></a>
+              <a href='/inventory/<%= inventory[i].itemId %>'><%= inventory[i].name %></a>
             </td>
             <td><img src='images/<%= inventory[i].image %>' width="20%"></td>
             <td><%= inventory[i].tag %></td>
