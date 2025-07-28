@@ -161,7 +161,7 @@ router.post('/register', [
           return res.redirect('/register');
         }
 
-        const verifyLink = `http://localhost:3000/verify-email?token=${token}`;
+        const verifyLink = `${process.env.BASE_URL}/verify-email?token=${token}`;
         transporter.sendMail({
           from: `"C237 CA2" <${process.env.EMAIL_USER}>`,
           to: email,
@@ -241,7 +241,7 @@ router.post('/forgotPassword', (req, res) => {
           return res.redirect('/forgotPassword');
         }
 
-        const resetLink = `http://localhost:3000/resetPassword?token=${token}`;
+        const resetLink = `${process.env.BASE_URL}/resetPassword?token=${token}`;
         transporter.sendMail({
           from: `"C237 CA2" <${process.env.EMAIL_USER}>`,
           to: email,
