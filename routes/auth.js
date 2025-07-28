@@ -1,13 +1,13 @@
+// Brian
 const express = require('express');
 const bcrypt = require('bcrypt');
-const conn = require('../db');
+const db = require('../db'); // db.js to connect to mysql
 const { body, validationResult } = require('express-validator');
 const { v4: uuidv4 } = require('uuid');
 const nodemailer = require('nodemailer');
-
 const router = express.Router();
 
-// Mailgun SMTP
+// Mailgun used to send email
 const transporter = nodemailer.createTransport({
   host: process.env.EMAIL_HOST,
   port: 587,
@@ -18,101 +18,84 @@ const transporter = nodemailer.createTransport({
   }
 });
 
-// Mailgun api error
 transporter.verify((err) => {
   if (err) console.error('[-] Mailgun Error:', err);
   else console.log('[+] Mailgun connection successful');
 });
 
-// Homepg accessible after logging in
-router.get('/home', async (req, res) => {
-  //  If user attempt to navigate to homepage without logging in, redirect to homepage
-  if (!req.session.userId) {
-    return res.redirect('/login');
-  }
-
-  // Select firstname from DB to display on the homepage after logging in
-  try {
-    const [rows] = await conn.promise().query('SELECT firstname FROM users WHERE id = ?', [req.session.userId]);
-    if (!rows.length) return res.redirect('/login');
-    res.render('home', { firstname: rows[0].firstname });
-  } catch (err) {
-    console.error('Homepage error:', err);
-    req.flash('error', 'Something went wrong.');
-    res.redirect('/login');
-  }
-});
-
-// Login with otp
+// Start at login page
 router.get('/', (req, res) => res.redirect('/login'));
-router.get('/login', (req, res) => { // Not login and not in session redirect to homepg
+
+// Login page
+router.get('/login', (req, res) => {
   res.render('login', {
-    email: req.session.tempEmail || ''
+    email: req.session.tempEmail || '' // Record user email during login
   });
 });
 
-// Check login password against database
-router.post('/login', async (req, res) => {
+router.post('/login', (req, res) => {
   const { email, password } = req.body;
 
-  try {
-    const [rows] = await conn.promise().query('SELECT * FROM users WHERE email = ?', [email]);
+  // DB query SELECT * FROM users WHERE email = ?
+  db.query('SELECT * FROM users WHERE email = ?', [email], async (err, results) => {
+    if (err) {
+      console.error('Login error:', err);
+      req.flash('error', 'Something went wrong');
+      return res.redirect('/login');
+    }
 
-    if (!rows.length || !(await bcrypt.compare(password, rows[0].password_hash))) {
+    // User not found or password compare failed
+    // DB returns 0 result or result password compare failed
+    if (!results.length || !(await bcrypt.compare(password, results[0].password_hash))) {
       req.flash('error', 'Invalid login credentials');
       return res.redirect('/login');
     }
 
-    if (!rows[0].is_verified) {
+    const user = results[0];
+
+    // If is_verified is false - user try to navigate without logging in, redirect back to login page
+    if (!user.is_verified) {
       req.flash('error', 'Please verify your email before logging in.');
       return res.redirect('/login');
     }
 
-    // 6 digit otp
+    // Random num generator for otp
     const otp = Math.floor(100000 + Math.random() * 900000).toString();
+    req.session.otp = otp; // Store otp in current session
+    req.session.tempUserId = user.id; // Store userid (PK) in current session
+    req.session.tempEmail = email; // Store user email in current session
 
-    // Checking otp against what user has entered
-    req.session.otp = otp;
-    req.session.tempUserId = rows[0].id;
-    req.session.tempEmail = email;
-
-    await transporter.sendMail({
+    // Send OTP to user email
+    transporter.sendMail({
       from: `"C237 CA2" <${process.env.EMAIL_USER}>`,
       to: email,
       subject: 'Your 2FA Code',
       text: `Your verification code is: ${otp}`
+    }, (mailErr) => {
+      if (mailErr) console.error('Send OTP error:', mailErr);
+      req.flash('success', 'OTP sent to your email.');
+      return res.redirect('/verification');
     });
-
-    req.flash('success', 'OTP sent to your email.');
-    return res.redirect('/verify-2fa');
-    // If there is error
-  } catch (err) {
-    console.error('Login error:', err);
-    req.flash('error', 'Something went wrong.');
-    res.redirect('/login');
-  }
+  });
 });
 
-// 2FA verification
-
-// If OTP expires
-router.get('/verify-2fa', (req, res) => {
-  if (!req.session.otp || !req.session.tempUserId) {
+// OTP Verification
+router.get('/verification', (req, res) => {
+  if (!req.session.otp || !req.session.tempUserId) { // If user not in otp session or userid session (not otp checking stage)
     req.flash('error', 'Session expired. Please log in again.');
     return res.redirect('/login');
   }
-
-  res.render('verify-2fa');
+  res.render('verification');
 });
 
-router.post('/verify-2fa', async (req, res) => {
+router.post('/verification', (req, res) => {
   const { otp } = req.body;
-
-  // If otp matches
+  // If input otp match
   if (otp === req.session.otp) {
-    req.session.userId = req.session.tempUserId;
-    req.session.email = req.session.tempEmail;
+    req.session.userId = req.session.tempUserId; // Set current session userid
+    req.session.email = req.session.tempEmail; // Set current session email
 
+    // Reset
     req.session.otp = null;
     req.session.tempUserId = null;
     req.session.tempEmail = null;
@@ -120,13 +103,14 @@ router.post('/verify-2fa', async (req, res) => {
     return res.redirect('/home');
   } else {
     req.flash('error', 'Invalid 2FA code');
-    res.redirect('/verify-2fa');
+    return res.redirect('/verification');
   }
 });
 
 // Registration
 router.get('/register', (req, res) => res.render('register'));
 
+// Input vvalidations
 router.post('/register', [
   body('firstname').notEmpty().withMessage('Firstname required'),
   body('lastname').notEmpty().withMessage('Lastname required'),
@@ -150,174 +134,196 @@ router.post('/register', [
 
   const { firstname, lastname, email, password } = req.body;
 
-  try {
-    const [existing] = await conn.promise().query('SELECT id FROM users WHERE email = ?', [email]);
+  // DB query SELECT id from users where email = ?
+  db.query('SELECT id FROM users WHERE email = ?', [email], async (err, existing) => {
+    if (err) {
+      console.error('Check email error:', err);
+      req.flash('error', 'Something went wrong.');
+      return res.redirect('/register');
+    }
+
     if (existing.length) {
       req.flash('error', 'Email already exists');
       return res.redirect('/register');
     }
 
+    // Store password as hash in database
     const hash = await bcrypt.hash(password, 10);
     const token = uuidv4();
 
-    await conn.promise().query(
+    db.query(
       'INSERT INTO users (firstname, lastname, email, password_hash, email_verification_token) VALUES (?, ?, ?, ?, ?)',
-      [firstname, lastname, email, hash, token]
+      [firstname, lastname, email, hash, token],
+      (insertErr) => {
+        if (insertErr) {
+          console.error('Register error:', insertErr);
+          req.flash('error', 'Something went wrong.');
+          return res.redirect('/register');
+        }
+
+        const verifyLink = `http://localhost:3000/verify-email?token=${token}`;
+        transporter.sendMail({
+          from: `"C237 CA2" <${process.env.EMAIL_USER}>`,
+          to: email,
+          subject: 'Verify your email',
+          html: `<p>Click below to verify your email address:</p><a href="${verifyLink}">${verifyLink}</a>`
+        });
+
+        req.flash('success', 'Registered! Please verify your email.');
+        res.redirect('/login');
+      }
     );
-
-    const verifyLink = `http://localhost:3000/verify-email?token=${token}`;
-
-    await transporter.sendMail({
-      from: `"C237 CA2" <${process.env.EMAIL_USER}>`,
-      to: email,
-      subject: 'Verify your email',
-      html: `<p>Click below to verify your email address:</p><a href="${verifyLink}">${verifyLink}</a>`
-    });
-
-    req.flash('success', 'Registered! Please verify your email.');
-    res.redirect('/login');
-  } catch (err) {
-    console.error('Register error:', err);
-    req.flash('error', 'Something went wrong.');
-    res.redirect('/register');
-  }
+  });
 });
 
-// Verify email for registration
-router.get('/verify-email', async (req, res) => {
+// Email verification
+router.get('/verify-email', (req, res) => {
   const token = req.query.token;
-
   if (!token) {
     req.flash('error', 'Invalid or expired verification link.');
     return res.redirect('/login');
   }
 
-  try {
-    const [rows] = await conn.promise().query(
-      'SELECT * FROM users WHERE email_verification_token = ?', [token]
-    );
-
-    if (!rows.length) {
+  db.query('SELECT * FROM users WHERE email_verification_token = ?', [token], (err, results) => {
+    if (err || !results.length) {
       req.flash('error', 'Invalid or expired verification link.');
       return res.redirect('/login');
     }
 
-    // 
-    await conn.promise().query(
+    db.query(
       'UPDATE users SET is_verified = TRUE, email_verification_token = NULL WHERE id = ?',
-      [rows[0].id]
-    );
+      [results[0].id],
+      (updateErr) => {
+        if (updateErr) {
+          console.error('Verify email error:', updateErr);
+          req.flash('error', 'Something went wrong.');
+          return res.redirect('/login');
+        }
 
-    req.flash('success', 'Email verified! Please log in.');
-    res.redirect('/login');
-  } catch (err) {
-    console.error('Verify email error:', err);
-    req.flash('error', 'Something went wrong.');
-    res.redirect('/login');
-  }
+        req.flash('success', 'Email verified! Please log in.');
+        res.redirect('/login');
+      }
+    );
+  });
 });
 
-// Forget password
-router.get('/forgot-password', (req, res) => res.render('forgot-password'));
+// Forgot Password
+router.get('/forgotPassword', (req, res) => res.render('forgotPassword'));
 
-router.post('/forgot-password', async (req, res) => {
+router.post('/forgotPassword', (req, res) => {
   const { email } = req.body;
   const msg = 'If the email exists, a reset link has been sent.';
 
-  try {
-    const [rows] = await conn.promise().query('SELECT id FROM users WHERE email = ?', [email]);
+  // DB query SELECT id FROM users WHERE email = ?
+  db.query('SELECT id FROM users WHERE email = ?', [email], (err, results) => {
+    if (err) {
+      console.error('Forgot password error:', err);
+      req.flash('error', 'Something went wrong.');
+      return res.redirect('/forgotPassword');
+    }
 
-    // Return generic success message regardless email found or not
-    if (!rows.length) {
+    if (!results.length) {
       req.flash('success', msg);
-      return res.redirect('/forgot-password');
+      return res.redirect('/forgotPassword');
     }
 
     const token = uuidv4();
-    const expires = new Date(Date.now() + 3600000);
+    const expires = new Date(Date.now() + 3600000); // set link to expire in 1hr
 
-    await conn.promise().query(
+    // DB query UPDATE users SET reset_token = ?, reset_token_expires = ? WHERE email = ?
+    db.query(
       'UPDATE users SET reset_token = ?, reset_token_expires = ? WHERE email = ?',
-      [token, expires, email]
+      [token, expires, email],
+      (updateErr) => {
+        if (updateErr) {
+          console.error('Reset token error:', updateErr);
+          req.flash('error', 'Something went wrong.');
+          return res.redirect('/forgotPassword');
+        }
+
+        const resetLink = `http://localhost:3000/resetPassword?token=${token}`;
+        transporter.sendMail({
+          from: `"C237 CA2" <${process.env.EMAIL_USER}>`,
+          to: email,
+          subject: 'Reset your password',
+          html: `<p>Click to reset (expires in 1 hr):</p><a href="${resetLink}">${resetLink}</a>`
+        });
+
+        req.flash('success', msg);
+        res.redirect('/forgotPassword');
+      }
     );
-
-    const resetLink = `http://localhost:3000/reset-password?token=${token}`;
-
-    await transporter.sendMail({
-      from: `"C237 CA2" <${process.env.EMAIL_USER}>`,
-      to: email,
-      subject: 'Reset your password',
-      html: `<p>Click to reset (valid 1 hour):</p><a href="${resetLink}">${resetLink}</a>`
-    });
-
-    req.flash('success', msg);
-    res.redirect('/forgot-password');
-  } catch (err) {
-    console.error('Forgot password error:', err);
-    req.flash('error', 'Something went wrong.');
-    res.redirect('/forgot-password');
-  }
+  });
 });
 
-// Password reset
-router.get('/reset-password', async (req, res) => {
+// Reset Password
+router.get('/resetPassword', (req, res) => {
   const token = req.query.token;
   if (!token) {
     req.flash('error', 'Invalid or expired token');
     return res.redirect('/login');
   }
 
-  try {
-    const [rows] = await conn.promise().query(
-      'SELECT * FROM users WHERE reset_token = ? AND reset_token_expires > NOW()', [token]
-    );
-
-    if (!rows.length) {
-      req.flash('error', 'Invalid or expired token');
-      return res.redirect('/login');
+  // DB query SELECT * FROM users WHERE reset_token = ? AND reset_token_expires > NOW()
+  db.query(
+    'SELECT * FROM users WHERE reset_token = ? AND reset_token_expires > NOW()', [token], // Check if token is still valid. Expiry date > time now
+    (err, results) => {
+      if (err || !results.length) {
+        req.flash('error', 'Invalid or expired token');
+        return res.redirect('/login');
+      }
+      res.render('resetPassword', { token });
     }
-
-    res.render('reset-password', { token });
-  } catch (err) {
-    console.error('Token validation error:', err);
-    req.flash('error', 'Something went wrong');
-    res.redirect('/login');
-  }
+  );
 });
 
-router.post('/reset-password', async (req, res) => {
+router.post('/resetPassword', async (req, res) => {
   const { token, password, confirmPassword } = req.body;
 
   if (password !== confirmPassword) {
     req.flash('error', 'Passwords do not match');
-    return res.redirect(`/reset-password?token=${token}`);
+    return res.redirect(`/resetPassword?token=${token}`);
   }
 
-  // Check if reset_token has expired
-  try {
-    const [rows] = await conn.promise().query(
-      'SELECT * FROM users WHERE reset_token = ? AND reset_token_expires > NOW()', [token]
-    );
+  db.query(
+    'SELECT * FROM users WHERE reset_token = ? AND reset_token_expires > NOW()', [token],
+    async (err, results) => {
+      if (err || !results.length) {
+        req.flash('error', 'Invalid or expired token');
+        return res.redirect('/login');
+      }
 
-    if (!rows.length) {
-      req.flash('error', 'Invalid or expired token');
-      return res.redirect('/login');
+      const hash = await bcrypt.hash(password, 10);
+
+      db.query(
+        'UPDATE users SET password_hash = ?, reset_token = NULL, reset_token_expires = NULL WHERE id = ?',
+        [hash, results[0].id],
+        (updateErr) => {
+          if (updateErr) {
+            console.error('Password reset error:', updateErr);
+            req.flash('error', 'Something went wrong');
+            return res.redirect('/login');
+          }
+
+          req.flash('success', 'Password updated. Please log in.');
+          res.redirect('/login');
+        }
+      );
     }
-
-    const hash = await bcrypt.hash(password, 10);
-
-    await conn.promise().query(
-      'UPDATE users SET password_hash = ?, reset_token = NULL, reset_token_expires = NULL WHERE id = ?',
-      [hash, rows[0].id]
-    );
-
-    req.flash('success', 'Password updated. Please log in.');
-    res.redirect('/login');
-  } catch (err) {
-    console.error('Reset error:', err);
-    req.flash('error', 'Something went wrong');
-    res.redirect('/login');
-  }
+  );
 });
 
+router.get('/logout', (req, res) => {
+  req.session.destroy(err => {
+    if (err) {
+      console.error('Logout error:', err);
+      req.flash('error', 'Could not log you out. Try again.');
+      return res.redirect('/home');
+    }
+    res.clearCookie('connect.sid'); // Clear session cookie
+    res.render('logout');
+  });
+});
+
+// app.use('/', authRoutes) in appjs
 module.exports = router;
