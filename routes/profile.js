@@ -10,7 +10,7 @@ const router = express.Router();
 // Prevent access without login
 function requireLogin(req, res, next) {
   if (!req.session.userId) {
-    req.flash('error', 'Please log in first.');
+    req.flash('error', 'Login required');
     return res.redirect('/login');
   }
   next();

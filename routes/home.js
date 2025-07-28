@@ -6,7 +6,7 @@ const router = express.Router();
 // Home page
 router.get('/', (req, res) => {
   if (!req.session.userId) { // If not in session redirect back to login
-    req.flash('error', 'Please log in to access the homepage.');
+    req.flash('error', 'Login required');
     return res.redirect('/login');
   }
 
