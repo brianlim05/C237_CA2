@@ -1,0 +1,146 @@
+<!-- Brian's EJS -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title><%= (session.role === 'superadmin') ? 'SuperAdmin Dashboard' : 'Admin Dashboard' %></title>
+  <!-- Bootstrap -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+  <!-- Navbar -->
+  <%- include('share/navbar', { active: 'admin' }) %>
+
+  <div class="container mt-5">
+    <h2 class="mb-4">
+      <%= (session.role === 'superadmin') ? 'SuperAdmin Dashboard' : 'Admin Dashboard' %>
+    </h2>
+
+    <% if (success && success.length > 0) { %>
+      <div class="alert alert-success"><%= success[0] %></div>
+    <% } %>
+    <% if (error && error.length > 0) { %>
+      <div class="alert alert-danger"><%= error[0] %></div>
+    <% } %>
+
+    <!-- Create Admin form for SuperAdmin -->
+    <% if (session.role === 'superadmin') { %>
+      <div class="card shadow-sm p-4 mb-4">
+        <h4 class="mb-3">Create New Admin</h4>
+        <form method="POST" action="/admin/createAdmin">
+          <div class="row">
+            <div class="col-md-6 mb-3">
+              <input type="text" name="firstname" class="form-control" placeholder="First Name" required>
+            </div>
+            <div class="col-md-6 mb-3">
+              <input type="text" name="lastname" class="form-control" placeholder="Last Name" required>
+            </div>
+          </div>
+          <div class="mb-3">
+            <input type="email" name="email" class="form-control" placeholder="Email" required>
+          </div>
+          <div class="mb-3">
+            <input type="password" name="password" class="form-control" placeholder="Password" required>
+          </div>
+          <button type="submit" class="btn btn-success">Create Admin</button>
+        </form>
+      </div>
+    <% } %>
+
+<!-- User management -->
+<div class="card shadow-sm p-4">
+    <h4 class="mb-3">Manage Users</h4>
+    <table class="table table-bordered table-striped align-middle">
+      <thead class="table-light">
+        <tr>
+          <th>First Name</th>
+          <th>Last Name</th>
+          <th>Student ID</th>
+          <th>Email</th>
+          <th>Role</th>
+          <th class="text-center">Update</th>
+          <th class="text-center">Delete</th>
+        </tr>
+      </thead>
+      <tbody>
+        <% users.forEach(user => { %>
+          <tr>
+            <% if (user.role === 'superadmin') { %>
+              <td><%= user.firstname %></td>
+              <td><%= user.lastname %></td>
+              <td><%= user.studentId %></td>
+              <td><%= user.email %></td>
+              <td><%= user.role %></td>
+              <td class="text-center"><span class="text-muted">Not allowed</span></td>
+              <td class="text-center"><span class="text-muted">Not allowed</span></td>
+            <% } else { %>
+              <form method="POST" action="/admin/updateUser/<%= user.id %>">
+                <td><input type="text" name="firstname" value="<%= user.firstname %>" class="form-control form-control-sm" required></td>
+                <td><input type="text" name="lastname" value="<%= user.lastname %>" class="form-control form-control-sm" required></td>
+                <td><%= user.studentId %></td>
+                <td><%= user.email %></td>
+                <td>
+                  <select name="role" class="form-select form-select-sm">
+                    <option value="user" <%= user.role==='user' ? 'selected' : '' %>>User</option>
+                    <option value="admin" <%= user.role==='admin' ? 'selected' : '' %>>Admin</option>
+                  </select>
+                </td>
+                <td class="text-center">
+                  <button type="submit" class="btn btn-sm btn-primary">Update</button>
+                </td>
+              </form>
+              <td class="text-center">
+                <button type="button" 
+                        class="btn btn-sm btn-danger" 
+                        data-bs-toggle="modal" 
+                        data-bs-target="#deleteModal" 
+                        data-userid="<%= user.id %>" 
+                        data-username="<%= user.firstname %> <%= user.lastname %>">
+                  Delete
+                </button>
+              </td>
+            <% } %>
+          </tr>
+        <% }) %>
+      </tbody>
+    </table>
+  </div>
+  
+  <!-- Delete popup confirmation -->
+  <div class="modal fade" id="deleteModal" tabindex="-1" aria-labelledby="deleteModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+      <div class="modal-content">
+        <form method="POST" id="deleteForm">
+          <div class="modal-header">
+            <h5 class="modal-title" id="deleteModalLabel">Confirm Delete</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+          </div>
+          <div class="modal-body">
+            Are you sure you want to delete <span id="userName"></span>?
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+            <button type="submit" class="btn btn-danger">Delete</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+  
+  <script>
+    const deleteModal = document.getElementById('deleteModal');
+    deleteModal.addEventListener('show.bs.modal', function (event) {
+      const button = event.relatedTarget;
+      const userId = button.getAttribute('data-userid');
+      const userName = button.getAttribute('data-username');
+      
+      this.querySelector('#userName').textContent = userName;
+      this.querySelector('#deleteForm').setAttribute('action', `/admin/deleteUser/${userId}`);
+    });
+  </script>
+  
+
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

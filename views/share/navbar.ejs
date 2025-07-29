@@ -1,0 +1,39 @@
+<nav class="navbar navbar-expand-lg navbar-light bg-light">
+    <div class="container-fluid d-flex justify-content-between">
+      <a class="navbar-brand" href="/home">SportShare</a>
+  
+      <!-- Center -->
+      <div class="d-flex justify-content-center flex-grow-1">
+        <ul class="navbar-nav">
+          <li class="nav-item">
+            <a class="nav-link <%= (active === 'home' ? 'active' : '') %>" href="/home">Home</a>
+          </li>
+          <% if (session && (session.role === 'superadmin' || session.role === 'admin')) { %>
+            <li class="nav-item">
+              <a class="nav-link <%= (active === 'admin' ? 'active' : '') %>" href="/admin">Admin Dashboard</a>
+            </li>
+          <% } %>
+        </ul>
+      </div>
+  
+      <!-- Right -->
+      <ul class="navbar-nav">
+        <% if (session && session.userId) { %>
+          <li class="nav-item">
+            <a class="nav-link <%= (active === 'profile' ? 'active' : '') %>" href="/profile">Profile</a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link" href="/logout">Logout</a>
+          </li>
+        <% } else { %>
+          <li class="nav-item">
+            <a class="nav-link <%= (active === 'login' ? 'active' : '') %>" href="/login">Login</a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link <%= (active === 'register' ? 'active' : '') %>" href="/register">Register</a>
+          </li>
+        <% } %>
+      </ul>
+    </div>
+  </nav>
+  

@@ -12,26 +12,7 @@
 </head>
 <body>
   <!-- Navbar -->
-  <nav class="navbar navbar-expand-lg navbar-light bg-light">
-    <div class="container-fluid">
-      <a class="navbar-brand" href="/home">C237CA2</a>
-      <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
-        <span class="navbar-toggler-icon"></span>
-      </button>
-      <div class="collapse navbar-collapse" id="navbarNav">
-        <ul class="navbar-nav ms-auto">
-          <li class="nav-item"><a class="nav-link" href="/home">Home</a></li>
-          <% if (session && session.userId) { %>
-            <li class="nav-item"><a class="nav-link" href="/profile">Profile</a></li>
-            <li class="nav-item"><a class="nav-link" href="/logout">Logout</a></li>
-          <% } else { %>
-            <li class="nav-item"><a class="nav-link" href="/login">Login</a></li>
-            <li class="nav-item"><a class="nav-link active" aria-current="page" href="/register">Register</a></li>
-          <% } %>
-        </ul>
-      </div>
-    </div>
-  </nav>
+  <%- include('share/navbar', { active: 'profile' }) %>
 
   <!-- Html -->
   <div class="container mt-5" style="max-width: 500px;">
@@ -49,18 +30,28 @@
     <form method="POST" action="/register">
       <div class="mb-3">
         <label for="firstname" class="form-label">First Name</label>
-        <input type="text" id="firstname" name="firstname" class="form-control" placeholder="First Name" required>
+        <input type="text" id="firstname" name="firstname" class="form-control" 
+               placeholder="First Name" value="<%= typeof firstname !== 'undefined' ? firstname : '' %>" required>
       </div>
-
+      
       <div class="mb-3">
         <label for="lastname" class="form-label">Last Name</label>
-        <input type="text" id="lastname" name="lastname" class="form-control" placeholder="Last Name" required>
+        <input type="text" id="lastname" name="lastname" class="form-control" 
+               placeholder="Last Name" value="<%= typeof lastname !== 'undefined' ? lastname : '' %>" required>
       </div>
-
+      
+      <div class="mb-3">
+        <label for="studentId" class="form-label">Student ID</label>
+        <input type="text" id="studentId" name="studentId" class="form-control" 
+               placeholder="8-digit Student ID" pattern="\d{8}" 
+               value="<%= typeof studentId !== 'undefined' ? studentId : '' %>" required>
+      </div>
+      
       <div class="mb-3">
         <label for="email" class="form-label">Email Address</label>
-        <input type="email" id="email" name="email" class="form-control" placeholder="Email" required>
-      </div>
+        <input type="email" id="email" name="email" class="form-control" 
+               placeholder="Email" value="<%= typeof email !== 'undefined' ? email : '' %>" required>
+      </div>      
 
       <div class="mb-3 position-relative">
         <label for="password" class="form-label">Password</label>

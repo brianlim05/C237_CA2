@@ -41,31 +41,44 @@ router.post('/login', (req, res) => {
     if (err) {
       console.error('Login error:', err);
       req.flash('error', 'Something went wrong');
-      return res.redirect('/login');
+      return res.render('login', {
+        email, // retain entered email
+        success: req.flash('success'),
+        error: req.flash('error'),
+        session: req.session
+      });
     }
 
     // User not found or password compare failed
-    // DB returns 0 result or result password compare failed
     if (!results.length || !(await bcrypt.compare(password, results[0].password_hash))) {
       req.flash('error', 'Invalid login credentials');
-      return res.redirect('/login');
+      return res.render('login', {
+        email, // retain entered email
+        success: req.flash('success'),
+        error: req.flash('error'),
+        session: req.session
+      });
     }
 
     const user = results[0];
 
-    // If is_verified is false - user try to navigate without logging in, redirect back to login page
     if (!user.is_verified) {
       req.flash('error', 'Please verify your email before logging in.');
-      return res.redirect('/login');
+      return res.render('login', {
+        email,
+        success: req.flash('success'),
+        error: req.flash('error'),
+        session: req.session
+      });
     }
 
     // Random num generator for otp
     const otp = Math.floor(100000 + Math.random() * 900000).toString();
-    req.session.otp = otp; // Store otp in current session
-    req.session.tempUserId = user.id; // Store userid (PK) in current session
-    req.session.tempEmail = email; // Store user email in current session
+    req.session.otp = otp;
+    req.session.tempUserId = user.id;
+    req.session.tempEmail = email;
+    req.session.tempRole = user.role; // Save role temporarily until OTP verified
 
-    // Send OTP to user email
     transporter.sendMail({
       from: `"C237 CA2" <${process.env.EMAIL_USER}>`,
       to: email,
@@ -94,11 +107,13 @@ router.post('/verification', (req, res) => {
   if (otp === req.session.otp) {
     req.session.userId = req.session.tempUserId; // Set current session userid
     req.session.email = req.session.tempEmail; // Set current session email
+    req.session.role = req.session.tempRole;   // Set current session role
 
     // Reset
     req.session.otp = null;
     req.session.tempUserId = null;
     req.session.tempEmail = null;
+    req.session.tempRole = null;
 
     return res.redirect('/home');
   } else {
@@ -114,6 +129,8 @@ router.get('/register', (req, res) => res.render('register'));
 router.post('/register', [
   body('firstname').notEmpty().withMessage('Firstname required'),
   body('lastname').notEmpty().withMessage('Lastname required'),
+  body('studentId')
+    .matches(/^\d{8}$/).withMessage('Student ID must be 8 digits'),
   body('email').isEmail().withMessage('Invalid email'),
   body('password')
     .isLength({ min: 8 }).withMessage('Minimum 8 characters')
@@ -129,21 +146,30 @@ router.post('/register', [
   const errors = validationResult(req);
   if (!errors.isEmpty()) {
     req.flash('error', errors.array().map(e => e.msg).join('<br>'));
-    return res.redirect('/register');
+    // Render register.ejs with cached inputs
+    return res.render('register', {
+      success: req.flash('success'),
+      error: req.flash('error'),
+      session: req.session,
+      firstname: req.body.firstname,
+      lastname: req.body.lastname,
+      studentId: req.body.studentId,
+      email: req.body.email
+    });
   }
 
-  const { firstname, lastname, email, password } = req.body;
+  const { firstname, lastname, studentId, email, password } = req.body;
 
-  // DB query SELECT id from users where email = ?
-  db.query('SELECT id FROM users WHERE email = ?', [email], async (err, existing) => {
+  // DB query SELECT id from users where email = ? OR studentId = ?
+  db.query('SELECT id FROM users WHERE email = ? OR studentId = ?', [email, studentId], async (err, existing) => {
     if (err) {
-      console.error('Check email error:', err);
+      console.error('Check email/studentId error:', err);
       req.flash('error', 'Something went wrong.');
       return res.redirect('/register');
     }
 
     if (existing.length) {
-      req.flash('error', 'Email already exists');
+      req.flash('error', 'Email or Student ID already exists');
       return res.redirect('/register');
     }
 
@@ -152,8 +178,8 @@ router.post('/register', [
     const token = uuidv4();
 
     db.query(
-      'INSERT INTO users (firstname, lastname, email, password_hash, email_verification_token) VALUES (?, ?, ?, ?, ?)',
-      [firstname, lastname, email, hash, token],
+      'INSERT INTO users (firstname, lastname, studentId, email, password_hash, email_verification_token) VALUES (?, ?, ?, ?, ?, ?)',
+      [firstname, lastname, studentId, email, hash, token],
       (insertErr) => {
         if (insertErr) {
           console.error('Register error:', insertErr);

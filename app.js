@@ -8,6 +8,7 @@ const path = require('path');
 const authRoutes = require('./routes/auth');
 const homeRoutes = require('./routes/home');
 const profileRoutes = require('./routes/profile');
+const adminRoutes = require('./routes/admin');
 
 /* XXXX ROUTES */
 // Add routes here for your function
@@ -46,6 +47,7 @@ app.use(express.static(path.join(__dirname, 'public')));
 app.use('/', authRoutes);
 app.use('/home', homeRoutes);
 app.use('/', profileRoutes);
+app.use('/', adminRoutes);
 
 /* XXXX ROUTES */
 // Add routes here for your function
