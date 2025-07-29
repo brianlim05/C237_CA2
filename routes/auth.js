@@ -1,4 +1,4 @@
-// Brian
+// Brian's Route
 const express = require('express');
 const bcrypt = require('bcrypt');
 const db = require('../db'); // db.js to connect to mysql
