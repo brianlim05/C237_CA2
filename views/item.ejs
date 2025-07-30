@@ -35,6 +35,25 @@
           <a href ="/borrowing">Back</a>
         <% } %>
     </div>
+
+    <div class="modal fade" id="imgModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered modal-lg">
+          <div class="modal-content border-0">
+            <div class="modal-body p-0">
+              <img
+                src="/images/<%= item.image %>"
+                class="w-100"
+                alt="Image of <%= item.itemName %>"
+                onerror="this.src='/images/placeholder.png'">
+            </div>
+            <div class="modal-footer border-0">
+              <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">
+                <i class="bi bi-x-lg"></i> Close
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
     
 </body>
 </html>
