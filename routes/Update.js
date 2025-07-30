@@ -22,3 +22,6 @@ app.get('/UpdateItem/:id', (req, res) => {
         res.redirect('/'); 
     });
 });
+
+// app.use('/', authRoutes) in appjs
+module.exports = router;

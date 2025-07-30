@@ -1,3 +1,4 @@
+// Zhi Shan's Routes
 app.get('/borrowing', (req, res) => {
     connection.query('SELECT * FROM items', (error, results) => {
         if (error) throw error;
@@ -68,3 +69,6 @@ app.get('/checkout', (req, res) => {
   req.session.list = [];
   res.render('checkout');
 });
+
+// app.use('/', authRoutes) in appjs
+module.exports = router;

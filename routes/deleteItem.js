@@ -1,4 +1,3 @@
-
 // Jing Xi's route
 app.post('/deleteItem/:id', (req, res) => {
     const itemId = req.params.id;
@@ -12,3 +11,6 @@ app.post('/deleteItem/:id', (req, res) => {
         }
     });
 });
+
+// app.use('/', authRoutes) in appjs
+module.exports = router;

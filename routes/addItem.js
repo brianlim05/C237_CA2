@@ -1,3 +1,4 @@
+//Zhi Shan's Routes
 app.get('/addItem', (req, res) => {
     res.render('addItem', {user: req.session.user } ); 
 });
@@ -21,3 +22,6 @@ app.post('/addItem', upload.single('image'),  (req, res) => {
         }
     });
 });
+
+// app.use('/', authRoutes) in appjs
+module.exports = router;

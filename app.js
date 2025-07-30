@@ -10,6 +10,15 @@ const homeRoutes = require('./routes/home');
 const profileRoutes = require('./routes/profile');
 const adminRoutes = require('./routes/admin');
 
+/* ZHI SHAN ROUTES */
+const addItemRoutes = require('/routes/addItem')
+const borrowRoutes = require ('/routes/borrow')
+
+/* JING XI ROUTES */
+const deleteItemRoutes = require ('/routes/deleteItem')
+
+/* JAYVIER ROUTES */
+const updateRoutes = require ('/routes/update')
 /* XXXX ROUTES */
 // Add routes here for your function
 
@@ -49,6 +58,15 @@ app.use('/home', homeRoutes);
 app.use('/', profileRoutes);
 app.use('/', adminRoutes);
 
+/* ZHI SHAN ROUTES */
+app.use ('/', addItemRoutes)
+app.use ('/', borrowRoutes)
+
+/* JING XI ROUTES */
+app.use ('/', deleteItemRoutes)
+
+/* JAYVIER ROUTES */
+app.use ('/', updateRoutes)
 /* XXXX ROUTES */
 // Add routes here for your function
 
