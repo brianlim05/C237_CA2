@@ -1,0 +1,40 @@
+<!-- product.ejs -->
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    <title>Sport Share</title>
+</head>
+<body>
+    <%- include('share/navbar', { active: 'admin' }) %>
+
+    <div class="container">
+
+
+
+      <br>
+        <div class="text-center"><h2>Item Details</h2></div>
+        <br>
+        <% if (item) { %> <!-- Check if product data exists -->
+            <div>
+                <p><b>Item Name:</b><br> <%= item.itemName %></p>
+                <p><b>Item Image:</b><br> <img src = "../images/<%= item.image %>" width="20%"></p>
+                <p><b>Item Quantity:</b><br> <%= item.quantity %></p>
+                <p><b>Price:</b><br> $<%= item.price.toFixed(2) %></p> 
+            </div>
+        <% } else { %>
+            <p>No Item found.</p>
+        <% } %>
+        <% if (session.role === "admin") { %>
+          <a href ="/inventory">Back</a>
+        <% } else { %>
+          <a href ="/borrowing">Back</a>
+        <% } %>
+    </div>
+    
+</body>
+</html>
