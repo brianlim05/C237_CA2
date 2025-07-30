@@ -18,10 +18,12 @@ const borrowRoutes = require ('./routes/borrow')
 const deleteItemRoutes = require ('./routes/deleteItem')
 
 /* JAYVIER ROUTES */
-const updateRoutes = require ('./routes/update')
+const updateRoutes = require ('./routes/Update')
 /* XXXX ROUTES */
 // Add routes here for your function
 
+/* RUO XI ROUTES */
+const itemRoutes = require ('./routes/item') 
 const app = express();
 
 // Body parsers
@@ -67,8 +69,9 @@ app.use ('/', deleteItemRoutes)
 
 /* JAYVIER ROUTES */
 app.use ('/', updateRoutes)
-/* XXXX ROUTES */
-// Add routes here for your function
+
+/* RUO XI ROUTES */
+app.use ('/', itemRoutes )
 
 // 404 Handler
 app.use((req, res) => {
