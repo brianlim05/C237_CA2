@@ -11,14 +11,14 @@ const profileRoutes = require('./routes/profile');
 const adminRoutes = require('./routes/admin');
 
 /* ZHI SHAN ROUTES */
-const addItemRoutes = require('/routes/addItem')
-const borrowRoutes = require ('/routes/borrow')
+const addItemRoutes = require('./routes/addItem')
+const borrowRoutes = require ('./routes/borrow')
 
 /* JING XI ROUTES */
-const deleteItemRoutes = require ('/routes/deleteItem')
+const deleteItemRoutes = require ('./routes/deleteItem')
 
 /* JAYVIER ROUTES */
-const updateRoutes = require ('/routes/update')
+const updateRoutes = require ('./routes/update')
 /* XXXX ROUTES */
 // Add routes here for your function
 
