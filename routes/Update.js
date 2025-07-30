@@ -1,4 +1,4 @@
-
+// Jay (UpdateItem ID)
 app.get('/UpdateItem/:id', (req, res) => {
     const itemId = req.params.id;
     const sql = 'UPDATE inventory SET status = ? WHERE itemId = ?';
@@ -17,7 +17,7 @@ app.get('/UpdateItem/:id', (req, res) => {
             console.log(`No item found with ID ${itemId} to update.`);
             return res.status(404).send('Item not found or no changes made');
         }
-        
+
         console.log(`Item with ID ${itemId} updated successfully.`);
         res.redirect('/'); 
     });
