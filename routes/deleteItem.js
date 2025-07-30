@@ -7,7 +7,7 @@ app.post('/deleteItem/:id', (req, res) => {
             console.error('Error deleting item:', error);
             res.status(500).send('Error deleting item');
         } else {
-            res.redirect('/adminIndex');
+            res.redirect('/inventory'); // to match with addItem, change accordingly
         }
     });
 });
