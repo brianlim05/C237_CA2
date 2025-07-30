@@ -12,26 +12,23 @@
             <li class="nav-item">
               <a class="nav-link <%= (active === 'admin' ? 'active' : '') %>" href="/admin">Admin Dashboard</a>
             </li>
+            <li class="nav-item">
+              <a class="nav-link" href="/inventory">Inventory</a>
+            </li> 
+            <li class="nav-item">
+              <a class="nav-link" href="/addItem">Add New Item</a>
+            </li> 
+          <% } else { %>
+            <li class="nav-item">
+              <a class="nav-link" href="/borrowing">Borrow Items</a>
+            </li>
+            <li class="nav-item">
+              <a class="nav-link" href="/borrowList">View Borrow List</a>
+            </li>
           <% } %>
         </ul>
-      </div>
-
-        <% if (session && session.role === 'admin') { %>
-        <li class="nav-item">
-          <a class="nav-link" href="/inventory">Inventory</a>
-        </li> 
-        <li class="nav-item">
-          <a class="nav-link" href="/addItem">Add New Item</a>
-        </li> 
-        <% } else { %>
-          <li class="nav-item">
-            <a class="nav-link" href="/borrowing">Borrow Items</a>
-          </li>
-          <li class="nav-item">
-            <a class="nav-link" href="/borrowList">View Borrow List</a>
-          </li>
-          <% } %>
-  
+      </div>        
+      
       <!-- Right -->
       <ul class="navbar-nav">
         <% if (session && session.userId) { %>
