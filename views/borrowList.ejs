@@ -1,3 +1,4 @@
+<!-- Zhi Shan's EJS -->
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -7,24 +8,7 @@
 </head>
 <body>
 <!-- Navbar -->
-  <nav class="navbar navbar-expand-sm bg-dark navbar-dark">
-    <div class="container-fluid">
-      <a class="navbar-brand" href="/">Inventory Tracker App</a>
-      <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#collapsibleNavbar">
-        <span class="navbar-toggler-icon"></span>
-      </button>
-      <div class="collapse navbar-collapse" id="collapsibleNavbar">
-        <ul class="navbar-nav">
-          <li class="nav-item">
-            <a class="nav-link" href="/borrowing">Borrow</a>
-          </li>
-          <li class="nav-item">
-            <a class="nav-link" href="/logout">Logout</a>
-          </li> 
-        </ul>
-      </div>
-    </div>
-  </nav>
+<%- include('share/navbar') %>
   <!-- List Content -->
   <div class="container">
     <h2 class="mt-4">Borrowing List</h2>
