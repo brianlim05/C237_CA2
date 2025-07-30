@@ -1,15 +1,14 @@
-// routes/update.js
-// Jay (UpdateItem by ID)
+// routes/updateItem.js – Jay (Update Item by ID)
 
 const express = require('express');
 const router = express.Router();
 const connection = require('../db'); // Adjust if db.js is in another folder
 
 // GET: Update item status by ID
-router.get('/UpdateItem/:id', (req, res) => {
+router.get('/updateItem/:id', (req, res) => {
   const itemId = req.params.id;
-  const sql = 'UPDATE inventory SET status = ? WHERE itemId = ?';
-  const updateValue = 'updated';
+  const sql = 'UPDATE items SET status = ? WHERE itemId = ?'; // Fixed table name to 'items'
+  const updateValue = 'updated'; // The status to update the item to
 
   connection.query(sql, [updateValue, itemId], (error, dbResults) => {
     if (error) {
@@ -23,7 +22,7 @@ router.get('/UpdateItem/:id', (req, res) => {
     }
 
     console.log(`Item with ID ${itemId} updated successfully.`);
-    res.redirect('/inventory'); // Or another page like '/home'
+    res.redirect('/inventory'); // Redirect to inventory after update
   });
 });
 

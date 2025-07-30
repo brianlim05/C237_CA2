@@ -18,11 +18,12 @@ const borrowRoutes = require ('./routes/borrow')
 const deleteItemRoutes = require ('./routes/deleteItem')
 
 /* JAYVIER ROUTES */
-const updateRoutes = require ('./routes/Update')
+const updateRoutes = require ('./routes/updateItem')
 /* XXXX ROUTES */
 // Add routes here for your function
 
 /* RUO XI ROUTES */
+const inventoryRoutes = require('./routes/inventory');
 const itemRoutes = require ('./routes/item') 
 const app = express();
 
@@ -71,6 +72,7 @@ app.use ('/', deleteItemRoutes)
 app.use ('/', updateRoutes)
 
 /* RUO XI ROUTES */
+app.use ('/', inventoryRoutes )
 app.use ('/', itemRoutes )
 
 // 404 Handler

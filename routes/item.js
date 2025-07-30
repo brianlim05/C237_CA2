@@ -2,19 +2,25 @@
 
 const express = require('express');
 const router = express.Router();
-const connection = require('../db'); // ✅ Make sure this path is correct
+const connection = require('../db');
 
-// View single product by ID
-router.get('/product/:id', (req, res) => {
+// View item details by ID
+router.get('/item/:id', (req, res) => {
   const itemId = req.params.id;
 
   connection.query('SELECT * FROM items WHERE itemId = ?', [itemId], (error, results) => {
-    if (error) throw error;
+    if (error) {
+      console.error('Error fetching item:', error);
+      return res.status(500).send('Database error');
+    }
 
     if (results.length > 0) {
+      const userRole = req.session.role || 'user';
+
       res.render('item', {
-        items: results[0],
-        session: req.session.user
+        item: results[0], // ✅ changed from items to item
+        session: req.session,
+        active: userRole === 'admin' ? 'inventory' : 'borrowing'
       });
     } else {
       res.status(404).send('Item not found');
