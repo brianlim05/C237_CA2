@@ -1,9 +1,9 @@
 //Zhi Shan's Routes
-app.get('/addItem', (req, res) => {
+router.get('/addItem', (req, res) => {
     res.render('addItem', {user: req.session.user } ); 
 });
 
-app.post('/addItem', upload.single('image'),  (req, res) => {
+router.post('/addItem', upload.single('image'),  (req, res) => {
     const { name, tag, quantity, price, availability } = req.body;
     let image;
     if (req.file) {

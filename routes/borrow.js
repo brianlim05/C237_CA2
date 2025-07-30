@@ -1,12 +1,12 @@
 // Zhi Shan's Routes
-app.get('/borrowing', (req, res) => {
+router.get('/borrowing', (req, res) => {
     connection.query('SELECT * FROM items', (error, results) => {
         if (error) throw error;
         res.render('borrowing', { user: req.session.user, items: results, errors: req.flash('error')});
       });
 });
 
-app.post('/add-to-list/:id', (req, res) => {
+router.post('/add-to-list/:id', (req, res) => {
     const itemId = parseInt(req.params.id);
     const quantity = parseInt(req.body.quantity) || 1;
 
@@ -56,7 +56,7 @@ app.post('/add-to-list/:id', (req, res) => {
     });
 });
 
-app.get('/borrowList', (req, res) => {
+router.get('/borrowList', (req, res) => {
     const list = req.session.list || [];
     const today = new Date();
     const returnDate = new Date(today);
@@ -65,7 +65,7 @@ app.get('/borrowList', (req, res) => {
     res.render('borrowList', { list, user: req.session.user, returnDate: formatDate });
 });
 
-app.get('/checkout', (req, res) => {
+router.get('/checkout', (req, res) => {
   req.session.list = [];
   res.render('checkout');
 });

@@ -1,5 +1,5 @@
 // Jay (UpdateItem ID)
-app.get('/UpdateItem/:id', (req, res) => {
+router.get('/UpdateItem/:id', (req, res) => {
     const itemId = req.params.id;
     const sql = 'UPDATE inventory SET status = ? WHERE itemId = ?';
     const updateValue = 'updated';
