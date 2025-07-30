@@ -15,12 +15,12 @@
           <% } %>
         </ul>
       </div>
-      
+
         <% if (session && session.role === 'admin') { %>
         <li class="nav-item">
           <a class="nav-link" href="/inventory">Inventory</a>
         </li> 
-]        <li class="nav-item">
+        <li class="nav-item">
           <a class="nav-link" href="/addItem">Add New Item</a>
         </li> 
         <% } else { %>
