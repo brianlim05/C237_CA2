@@ -1,4 +1,5 @@
 
+// Jing Xi's route
 app.post('/deleteItem/:id', (req, res) => {
     const itemId = req.params.id;
     const sql = 'DELETE FROM inventory WHERE itemId = ?';
